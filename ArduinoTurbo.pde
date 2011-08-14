@@ -53,13 +53,32 @@ void loop() {
   x = analogRead(xPin);    
   y = analogRead(yPin); 
   
+  // to range
+  x = x - 250;
+  if(x < 0)
+    x = 0;
+  
+  if(x > 254)
+    x = 255;
+    
+  y = y - 250;
+  if(y < 0)
+    y = 0;
+  
+  if(y > 254)
+    y = 255;  
+   
+    
   Serial1.write("<y");
-  Serial1.write(x);
+  Serial1.write(y);
   Serial1.write(">");
   
+  Serial.print("<x");
+  Serial.print(x);
+  Serial.println(">");  
+  
   Serial1.write("<x");
-  Serial1.write(125-((x-230)/2));
-  //Serial1.write(x);
+  Serial1.write(x);
   Serial1.write(">");  
   
   if(LCD)
@@ -99,7 +118,7 @@ void loop() {
   Serial1.write(">");
   
   
-  delay(40);
+  delay(50);
  
 }
 
