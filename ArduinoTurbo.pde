@@ -43,82 +43,121 @@ void setup() {
 }
 
 
+int i=0;
+int updatePause=0;
 
 void loop() {
   
-   
   /**
-  * G-Force
-  */
-  x = analogRead(xPin);    
-  y = analogRead(yPin); 
-  
-  // to range
-  x = x - 250;
-  if(x < 0)
-    x = 0;
-  
-  if(x > 254)
-    x = 255;
-    
-  y = y - 250;
-  if(y < 0)
-    y = 0;
-  
-  if(y > 254)
-    y = 255;  
-   
-    
-  Serial1.write("<y");
-  Serial1.write(y);
-  Serial1.write(">");
-  
-  Serial.print("<x");
-  Serial.print(x);
-  Serial.println(">");  
-  
-  Serial1.write("<x");
-  Serial1.write(x);
-  Serial1.write(">");  
-  
-  if(LCD)
-    drawGforce(x,y);
-
-
-  /**
-  * Turbo Pressure
-  */
-  turbo = analogRead(turboPin);  
-   
-  turbo = turbo - 167;
-
-  if(turbo < 0) 
-    turbo = 0.0;
-  
-  //correcao
-  factor = 750;
-
-  float bar = turbo / factor;
-  
-  if(LCD)
-    drawTurbo(bar);
-  
-  Serial.println( int( (bar - int(bar) )*10));
+  * Pulse Width
  
+  
+  Govval = analogRead(Govpin);    
+  Govval = map(Govval, 0, 1023, 1,1000); 
  
-  /**
-  * Lambda Sensor
-  * 1v - 204 (rich/max value)
-  * Adjust: lambda/2 = 0-100 range
-  **/  
-  lambda = analogRead(lambdaPin);
+  val = analogRead(potpin);             
+  val = map(val, 0, 1023, 0, 20);     
+  digitalWrite(InjectorPin, HIGH);   // set the injector on
+  delay( 1000 - Govval + val);                  // on pulse width
+  digitalWrite(InjectorPin, LOW);    // set the injector off
+  delay(25-val);                  // off width
+ 
+  updatePause++;
+  if( updatePause > 8 )
+  {
+   // UpdateLCD();
+    updatePause = 0;
+  }
+   */
   
-  Serial1.write("<l");
-  Serial1.write(lambda/2);
-  Serial1.write(">");
+  
+  //val = map(val, 49, 57, 0, 179);     // scale it to use it with the servo (value between 0 and 180)
+  
+  Serial.println("loop");
+  
+   
+  if( i % 40 == 0 ){ // each 40ms we will read sensors
+    
+    if(Serial1.available() > 0){
+        Serial.println("chegando do BT");
+        Serial.println(Serial1.read());
+    }
+    
+    
+    Serial.println("sensors");
+    /**
+    * G-Force
+    */
+    x = analogRead(xPin);    
+    y = analogRead(yPin); 
+    
+    // to range
+    x = x - 250;
+    if(x < 0)
+      x = 0;
+    
+    if(x > 254)
+      x = 255;
+      
+    y = y - 250;
+    if(y < 0)
+      y = 0;
+    
+    if(y > 254)
+      y = 255;  
+     
+      
+    Serial1.write("<y");
+    Serial1.write(y);
+    Serial1.write(">");
+    
+    Serial.print("<x");
+    Serial.print(x);
+    Serial.println(">");  
+    
+    Serial1.write("<x");
+    Serial1.write(x);
+    Serial1.write(">");  
+    
+    if(LCD)
+      drawGforce(x,y);
   
   
-  delay(50);
+    /**
+    * Turbo Pressure
+    */
+    turbo = analogRead(turboPin);  
+     
+    turbo = turbo - 167;
+  
+    if(turbo < 0) 
+      turbo = 0.0;
+    
+    //correcao
+    factor = 750;
+  
+    float bar = turbo / factor;
+    
+    if(LCD)
+      drawTurbo(bar);
+    
+    Serial.println( int( (bar - int(bar) )*10));
+   
+   
+    /**
+    * Lambda Sensor
+    * 1v - 204 (rich/max value)
+    * Adjust: lambda/2 = 0-100 range
+    **/  
+    lambda = analogRead(lambdaPin);
+    
+    Serial1.write("<l");
+    Serial1.write(lambda/2);
+    Serial1.write(">");
+  } 
+ 
+  i++; 
+  delay(1);
  
 }
 
@@ -195,4 +234,5 @@ void drawGforce(int x, int y){
       GLCD.Puts("  ");
       */
 }
+
 
