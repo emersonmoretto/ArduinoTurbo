@@ -1,21 +1,15 @@
-
-
-int injectorPin = 13;
-
-int factorPin = A3; 
-int factor = 0;
-
 boolean LCD = false; 
 
+// PIN
+int injectorPin = 13;
+int turboPin = A0; 
 int xPin = A8; 
 int yPin = A9; 
-
-int turboPin = A0; 
-float turbo = 0;
-
 int lambdaPin = A10;
-int lambda = 0;
 
+// Global vars
+float turbo = 0;
+int lambda = 0;
 int x = 0;  // variable to store the value coming from the sensor
 int y = 0;  // variable to store the value coming from the sensor
 
@@ -109,7 +103,7 @@ void loop() {
       Serial.println(Serial1.read());
     }
     
-    /**
+   /**
    * Lambda Sensor
    * 1v - 204 (rich/max value)
    * Adjust: lambda/2 = 0-100 range
@@ -125,9 +119,7 @@ void loop() {
   //Serial.print(lambda);
   //Serial.println(">");
   
-
-
-    //Serial.println("sensors");
+    
     /**
      * G-Force
      */
@@ -161,9 +153,7 @@ void loop() {
     Serial1.write("<x");
     Serial1.write(x);
     Serial1.write(">");  
-
-    
-
+  
 
     /**
      * Turbo Pressure
@@ -172,22 +162,8 @@ void loop() {
 
     Serial.println(turbo);
   
-    turbo = turbo - 167;
-
-    if(turbo < 0) 
-      turbo = 0.0;
-
-    //correcao
-    factor = 750;
-
-    float bar = turbo / factor;
-
-   
-
-    //Serial.println( int( (bar - int(bar) )*10));
-
     Serial1.write("<t");
-    Serial1.write(int( (bar - int(bar) )*10));
+    Serial1.write(turbo);
     Serial1.write(">");
 
   } 
