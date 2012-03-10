@@ -85,10 +85,8 @@ void loop() {
     }
     
   }
-  
-  
+    
   //fuelCount--;
-  
   
   
   if(fuelCount == 0)
@@ -159,7 +157,8 @@ void loop() {
      * Turbo Pressure
      */
     turbo = analogRead(turboPin);  
-
+    Serial.println(turbo);
+    turbo = map(turbo,330,1024,0,25);
     Serial.println(turbo);
   
     Serial1.write("<t");
