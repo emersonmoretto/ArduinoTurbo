@@ -158,11 +158,12 @@ void loop() {
      */
     turbo = analogRead(turboPin);  
     Serial.println(turbo);
-    turbo = map(turbo,330,1024,0,25);
-    Serial.println(turbo);
+    turbo -= 310; // starting with 1.9v and I don't no why
+    turbo = map(turbo,0,1024,0,25);
+    Serial.println((int)turbo);
   
     Serial1.write("<t");
-    Serial1.write(turbo);
+    Serial1.write((int)turbo);
     Serial1.write(">");
 
   } 
