@@ -1,3 +1,11 @@
+#include "FreqPeriodCounter.h"
+
+const byte counterPin = 3; 
+const byte counterInterrupt = 1; // = pin 3
+FreqPeriodCounter counter(counterPin, micros, 0);
+
+
+
 boolean LCD = false; 
 
 // PIN
@@ -19,12 +27,9 @@ int i=0;
 int updatePause=0;
 int window=30;
 
+//TODO implementar a alteracao disso via Android/BT
 int TURBO_THRESHOLD = 1;
 int LAMBDA_THRESHOLD = 9;
-
-
-//
-
 
 
 void setup() {
@@ -35,8 +40,15 @@ void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
 
+  attachInterrupt(counterInterrupt, counterISR, CHANGE);
+
   delay(2000);
 }
+
+void counterISR(){
+  counter.poll();
+}
+
 
 void fuelInject(int percent){
   
@@ -117,27 +129,51 @@ void fuelInject(int percent){
         }
 }
 
-
-void loop() {
-  
   //Lambda MAPA
-  //TODO fazer a regulagem do mapa via Android
               //0 , 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12
   int mapa[] = {90, 80, 70, 60, 50, 40, 40, 30, 20, 20, 20, 0,  0};
   
   
+void loop() {
+  
   digitalWrite(injectorPin,LOW);
   i++;
-  delay(500);
+  delay(20);
   
   lambda = 122;
   
-  //if( i % 8 == 0 ){
-   // each 40ms we will read sensors (Turbo and G-Force)
-
+  if(counter.ready()){
+    Serial.print(counter.hertz());
+    Serial.println(" hz");
+  }
+  
+    /**
+    * Recebendo novo Mapa via BT
+    */
     if(Serial1.available() > 0){
-      Serial.print("Chegando do BT: ");
-      Serial.println(Serial1.read());
+      Serial.println("Chegando do BT: ");
+      char c = Serial1.read();
+      if(c == 'm'){
+      
+        int buff[] = {0,0,0};
+        int j=0,k=0;
+      
+        while(Serial1.available() > 0){
+          int c = Serial1.read();        
+        
+          if(c == ','){
+            // ler e converter os valores, [0]*10+[1]
+            int item = (buff[0] - 48) * 10;
+            mapa[k] = item;  
+            k++;
+            Serial.println(item);            
+            j=0;          
+          }else{
+            buff[j] = c;
+            j++;
+          }        
+        }
+      }
     }
     
     
@@ -154,9 +190,9 @@ void loop() {
     Serial1.write(lambda);
     Serial1.write(">");
 
-   // Serial.print("l:");
-   // Serial.println(lambda);
-    
+    Serial.print("l:");
+    Serial.println(lambda);
+   
     
     /**
     DEV
@@ -174,6 +210,8 @@ void loop() {
     * G-Force
     */
     readGForce();
+    
+
    
     /**
      * Turbo Pressure
@@ -193,12 +231,9 @@ void loop() {
     * Fuel Inject
     */
    // Serial.println(lambda);
-    if(lambda <= LAMBDA_THRESHOLD){
-    //if(turbo >= TURBO_THRESHOLD && lambda <= LAMBDA_THRESHOLD){
+    //if(lambda <= LAMBDA_THRESHOLD){
+    if(turbo >= TURBO_THRESHOLD && lambda <= LAMBDA_THRESHOLD){
 
-      // atuando entre 20% e 90%
-      //int percent = map(lambda, 0, LAMBDA_THRESHOLD, 2, 9);
-      
       // Usando mapa de injecao
       fuelInject(mapa[lambda]);
 
@@ -233,3 +268,5 @@ void readGForce(){
     Serial1.write(x);
     Serial1.write(">");  
 }
+
+
