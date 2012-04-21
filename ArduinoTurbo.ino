@@ -2,7 +2,7 @@
 
 const byte counterPin = 3; 
 const byte counterInterrupt = 1; // = pin 3
-FreqPeriodCounter counter(counterPin, micros, 0);
+FreqPeriodCounter counter(counterPin, millis, 0);
 
 
 
@@ -142,9 +142,23 @@ void loop() {
   
   lambda = 122;
   
+  /**
+  * RPM
+  fator 0.6 (map)
+  1000 33hz 
+  2000 70hz 66
+  3000 100hz 99
+  4000 130hz 132
+  5000 170hz 165
+  6000 200hz 199
+  7000 233hz 233
+  */
   if(counter.ready()){
     Serial.print(counter.hertz());
     Serial.println(" hz");
+    Serial1.write("<r");
+    Serial1.write( map(counter.hertz(), 0, 233, 0, 140));
+    Serial1.write(">");
   }
   
     /**
@@ -190,9 +204,10 @@ void loop() {
     Serial1.write(lambda);
     Serial1.write(">");
 
-    Serial.print("l:");
-    Serial.println(lambda);
-   
+    if(i%50 == 0){
+      Serial.print("l:");
+      Serial.println(lambda);
+    }
     
     /**
     DEV
@@ -235,7 +250,7 @@ void loop() {
     if(turbo >= TURBO_THRESHOLD && lambda <= LAMBDA_THRESHOLD){
 
       // Usando mapa de injecao
-      fuelInject(mapa[lambda]);
+      //fuelInject(mapa[lambda]);
 
     }else{  /// Nao preciso injetar nada!!!
     
