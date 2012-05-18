@@ -247,17 +247,24 @@ void loop() {
     * Recebendo novo Mapa via BT
     */
     if(Serial1.available() > 0){
-      Serial.println("Chegando do BT: ");
+      
       char c = Serial1.read();
+      Serial.print("Chegando do BT: ");
+      Serial.println(c);
       
       // Mapa do bico 1
       if(c == 'm'){
-      
+       Serial.println("Chegando mapa do bico 1");
         int buff[] = {0,0,0};
         int j=0,k=0;
       
         while(Serial1.available() > 0){
           int c = Serial1.read();        
+          
+          if(c == 110){
+            Serial.println("mapa 2");
+            break;
+          }
         
           if(c == ','){
             // ler e converter os valores, [0]*10+[1]
@@ -274,8 +281,8 @@ void loop() {
       }
       
       // Mapa do bico 2
-      if(c == 'n'){
-      
+      if(c == 110){
+       Serial.println("Chegando mapa do bico 2");
         int buff[] = {0,0,0};
         int j=0,k=0;
       
