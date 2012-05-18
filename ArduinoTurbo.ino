@@ -9,7 +9,9 @@ FreqPeriodCounter counter(counterPin, millis, 0);
 boolean LCD = false; 
 
 // PIN
-int injectorPin = 8;
+int injectorPin1 = 8;
+int injectorPin2 = 9;
+
 int turboPin = A0; 
 int xPin = A8; 
 int yPin = A9; 
@@ -35,8 +37,9 @@ int LAMBDA_THRESHOLD = 9;
 void setup() {
   
   // declare the injectorPin as an OUTPUT:
-  pinMode(injectorPin, OUTPUT);  
-
+  pinMode(injectorPin1, OUTPUT);  
+  pinMode(injectorPin2, OUTPUT);  
+  
   Serial.begin(9600);
   Serial1.begin(9600);
 
@@ -49,16 +52,63 @@ void counterISR(){
   counter.poll();
 }
 
+/**
+Metodo que recebe o mapa de injecao fracionado em 1 ms e atua nos bicos injetores
+*/
+void fuelInject(int mapa1[], int mapa2[]){
+    
+  boolean b1 = false;
+  boolean b2 = false;
+  
+  Serial.println("start");
+  for(int i=0 ; i < 30 ; i++){
+  
+   // if(mapa1[i] == 0 || mapa2[i] == 0)
+      delay(1);
+    
+    if(mapa1[i] == 1){
+      if(!b1) digitalWrite(injectorPin1,HIGH);
+      b1 = true;
+      Serial.print(1);
+    }else{
+      if(b1) digitalWrite(injectorPin1,LOW);
+      b1 = false;
+      Serial.print(0);
+    }    
+        
+    if(mapa2[i] == 1){
+      if(!b2) digitalWrite(injectorPin2,HIGH);
+      b2 = true;     
+    }else{
+      if(b2) digitalWrite(injectorPin2,LOW);
+      b2 = false;
+    }
+  }
+  
+  Serial.println("end");
+  // seguranca
+  digitalWrite(injectorPin1,LOW);
+  digitalWrite(injectorPin2,LOW);  
+  
+}
 
-void fuelInject(int percent){
+/**
+Metodo que faz a predicao de como serao feitos os ciclos de abertura e fechamento do bico injetor
+Recebe o percentual a ser injetado e preenche o mapa de injecao fracionado em 1ms
+*/
+boolean predictInject(int mapa[], int percent){
   
         if(percent == 0){
           delay(window);
-          return;
+          return false;
         }
+       
+        
+        for(int k=0; k<30 ; k++)
+          mapa[k] = 9;
   
-  	int MAX_CYCLE = 5;
-  	int MIN_CYCLE_WIDTH = 4; // quanto menor, mais ele vai abrir e fechar
+  	int MAX_CYCLE = 6;
+  	int MIN_CYCLE_WIDTH = 2; // quanto menor, mais ele vai abrir e fechar
 	
 	float prop = ( (float) window * ( (float) percent/100));		
 		
@@ -100,43 +150,75 @@ void fuelInject(int percent){
         sprintf(foo2,"%i ciclo(s) de %i ms com intervalos de %i",i, (int) div, (int) gap);
         Serial.println(foo2);
   
-                // System.out.print("Janela: "+window + "ms com "+percent+"%. Tempo de injecao: "+prop+"ms ==> " );
-                // System.out.println(i +" ciclo(s) de "+div+"ms com intervalos de "+gap+" iniciando em "+gap+"ms");
-				
+        // System.out.print("Janela: "+window + "ms com "+percent+"%. Tempo de injecao: "+prop+"ms ==> " );
+        // System.out.println(i +" ciclo(s) de "+div+"ms com intervalos de "+gap+" iniciando em "+gap+"ms");
+			
+
+/*
+Aqui vamos converter a predicao do algoritmo em intervalos e ciclos de injecao para um mapa de 0 e 1
+ex: 
+5 ciclo(s) de 3 ms com intervalos de 3
+tem que resultar nisso:
+0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1
+*/	
 	int soma = 0;
+        int f=0;
 	for(int j=0; j < qtdGaps+i ; j++){
-		if(j % 2 == 0){
+		if(j % 2 == 0){ // eh um gap?? - sempre comeca com gap
 			soma+=gap;
-                        delay(gap);                        
+                        
 			Serial.print("sleep ");
                         Serial.println(gap);
-		}else{			
+                        
+                        for(int k=0; k<gap ; k++){
+                          mapa[f+k] = 0;
+                        } 
+                        f+=gap;
+                        
+		}else{	// injetando?
+  		
 	        	soma+=div;
-                        digitalWrite(injectorPin,HIGH);
-                        delay(div);
-                        digitalWrite(injectorPin,LOW);
-		        Serial.print("FUEL por ");
+                        
+                        for(int k=0; k < div ; k++){
+                          mapa[f+k] = 1;
+                        }
+                        f+=div;
+                       // digitalWrite(injectorPin,LOW);
+                                
+                        Serial.print("FUEL por ");
                         Serial.println(div);
 		}
 	}
+        Serial.println("----");
+        Serial.println(qtdGaps);
+
+        Serial.println("----");
+        for(int k=0; k<30 ; k++){
+          Serial.print(mapa[k]);
+          Serial.print(",");
+        } 
+        Serial.println("----");        
 	Serial.print("soma:");
         Serial.println(soma);
 
         //algo deu MUITO errado... sleepando durante a janela
         if(soma == 0){
-          Serial.println("nao foi possivel calcular a injecao");
-          delay(window);
+          Serial.println("nao foi possivel calcular a injecao");          
         }
+        return true;
+        
 }
 
   //Lambda MAPA
               //0 , 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12
-  int mapa[] = {90, 80, 70, 60, 50, 40, 40, 30, 20, 20, 20, 0,  0};
-  
+  int mapa[] = {80, 70, 60, 50, 40, 30, 20, 20, 10, 0, 0, 0, 0};
+  int mapa2[] = {60, 60, 50, 40, 40, 30, 20, 10, 0, 0, 0, 0, 0};  
   
 void loop() {
   
-  digitalWrite(injectorPin,LOW);
+  digitalWrite(injectorPin1,LOW);
+  digitalWrite(injectorPin2,LOW);
+  
   i++;
   delay(20);
   
@@ -167,6 +249,8 @@ void loop() {
     if(Serial1.available() > 0){
       Serial.println("Chegando do BT: ");
       char c = Serial1.read();
+      
+      // Mapa do bico 1
       if(c == 'm'){
       
         int buff[] = {0,0,0};
@@ -179,6 +263,29 @@ void loop() {
             // ler e converter os valores, [0]*10+[1]
             int item = (buff[0] - 48) * 10;
             mapa[k] = item;  
+            k++;
+            Serial.println(item);            
+            j=0;          
+          }else{
+            buff[j] = c;
+            j++;
+          }        
+        }
+      }
+      
+      // Mapa do bico 2
+      if(c == 'n'){
+      
+        int buff[] = {0,0,0};
+        int j=0,k=0;
+      
+        while(Serial1.available() > 0){
+          int c = Serial1.read();        
+        
+          if(c == ','){
+            // ler e converter os valores, [0]*10+[1]
+            int item = (buff[0] - 48) * 10;
+            mapa2[k] = item;  
             k++;
             Serial.println(item);            
             j=0;          
@@ -209,23 +316,21 @@ void loop() {
       Serial.println(lambda);
     }
     
-    /**
+    /********************************************************************
     DEV
-    */
+    /*******************************************************************/
     if(Serial.available() > 0){
       Serial.println("chegando na serial");
       lambda = Serial.read(); 
       lambda-=48;     
     }
     
-    
-    
+   
     
     /**
     * G-Force
     */
     readGForce();
-    
 
    
     /**
@@ -245,13 +350,27 @@ void loop() {
     /**
     * Fuel Inject
     */
-   // Serial.println(lambda);
-    //if(lambda <= LAMBDA_THRESHOLD){
-    if(turbo >= TURBO_THRESHOLD && lambda <= LAMBDA_THRESHOLD){
 
-      // Usando mapa de injecao
-      //fuelInject(mapa[lambda]);
+    /********************************************************************
+    DEV
+    /*******************************************************************/
+    if(lambda <= LAMBDA_THRESHOLD){ // DEBUG
+    
+    // Verificacao de Thresholds para atuar!
+    //if(turbo >= TURBO_THRESHOLD && lambda <= LAMBDA_THRESHOLD){
 
+      int mapaDiscretoBico1[window];
+      int mapaDiscretoBico2[window]; 
+       
+      // Aqui fazemos a predicao da injecao que preenche o mapa de injecao em valores discretos fragmentados a cada 1 ms
+      // ou seja, mandamos o percentual a ser injetado e ele preenche o mapa assim: 0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1
+      // onde 0=bico fechado e 1=bico aberto
+      predictInject(mapaDiscretoBico1, mapa[lambda]); // Bico 1
+      predictInject(mapaDiscretoBico2, mapa2[lambda]); // Bico 2
+      
+      // Atuando
+      fuelInject(mapaDiscretoBico1, mapaDiscretoBico2);
+      
     }else{  /// Nao preciso injetar nada!!!
     
       delay(window); // dormindo...
