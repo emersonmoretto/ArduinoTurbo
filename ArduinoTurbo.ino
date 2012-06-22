@@ -30,7 +30,7 @@ int updatePause=0;
 int window=30;
 
 //TODO implementar a alteracao disso via Android/BT
-int TURBO_THRESHOLD = 1;
+int TURBO_THRESHOLD = 2;
 int LAMBDA_THRESHOLD = 9;
 
 
@@ -352,12 +352,12 @@ void loop() {
     */
 
     /****** DEV ********/
-    delay(20);    
-    if(lambda <= LAMBDA_THRESHOLD){ // DEBUG
+    //delay(20);    
+    //if(lambda <= LAMBDA_THRESHOLD){ // DEBUG
     /****** DEV ********/
     
     // Verificacao de Thresholds para atuar!
-    //if(turbo >= TURBO_THRESHOLD && lambda <= LAMBDA_THRESHOLD){
+    if(turbo >= TURBO_THRESHOLD && lambda <= LAMBDA_THRESHOLD){
 
       int mapaDiscretoBico1[window];
       int mapaDiscretoBico2[window]; 
@@ -371,12 +371,13 @@ void loop() {
       // Atuando
       fuelInject(mapaDiscretoBico1, mapaDiscretoBico2);
       
-      delay(3);      
+      delay(3);
+            
     }else{  /// Nao preciso injetar nada!!!
     
-      delay(window); // dormindo...
+      delay(window); // dormindo...    
+    }  
     
-    }
 }
 
 
