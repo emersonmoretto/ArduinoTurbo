@@ -289,22 +289,17 @@ void loop() {
      * Turbo Pressure
      kPa value = kg/cm2 value x 98.0665     
      */     
-     
-      turbo = (float) analogRead(turboPin) * 5.0 / 1024.0;      
-      turboInKpa = abs (( (turbo) - ( 0.04 * 5.0 ) ) / ( 5 * 0.00369 ));
-      
-      // Mostrar la temperatura en Celsius per port serie
-      
-      Serial.print("kPa: ");
-      Serial.println(turboInKpa);
- 
-
-/* ORIGINAL CODE
     turbo = analogRead(turboPin);  
-   
-    turbo -= 310; // starting with 1.9v and I don't no why
+    turboInKpa = map(turbo, 0, 1023, 20, 250);
+
+    Serial.print("turbo (kPa): ");   
+    Serial.println(turboInKpa-95);
+       
+
+
+    //ToDo arrumar isso!!
+    turbo -= 310; // starting with 1.52v - discounting default atmospheric pressure
     turbo = map(turbo,0,1024,0,25);    
-*/
 
     Serial1.write("<t");
     Serial1.write((int)turbo);
@@ -314,10 +309,11 @@ void loop() {
     // USB Debug
     Serial.print("RPM (x1000): "); Serial.println(counter.hertz());
     
-    Serial.print("Turbo pressure (PSI): "); Serial.println(turbo);
+    Serial.print("Turbo pressure (kg/cm2): "); Serial.println(turbo);
     
-    Serial.print("Lambda (0-12): "); Serial.write(lambda);
+    Serial.print("Lambda (0-12): "); Serial.println(lambda);
     
+     Serial.println("-----------------------------");
     /**
     * Fuel Inject
     */
@@ -330,7 +326,7 @@ void loop() {
     /****** DEV ********/
     
     
-    
+    delay(400);
   
     
     
