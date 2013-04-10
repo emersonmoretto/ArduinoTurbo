@@ -102,4 +102,7 @@ void loop(){
          readMap();
       }
     }
+    
+    delay(1000);
+    Serial.println("to aqui");
 }
