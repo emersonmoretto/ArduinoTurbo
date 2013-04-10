@@ -55,44 +55,6 @@ void counterISR(){
   counter.poll();
 }
 
-/**
-Metodo que recebe o mapa de injecao fracionado em 1 ms e atua nos bicos injetores
-*/
-void fuelInject(int mapa1[], int mapa2[]){
-    
-  boolean b1 = false;
-  boolean b2 = false;
-  
-  for(int i=0 ; i < 30 ; i++){
-
-    delay(1);
-    
-    if(mapa1[i] == 1){
-      if(!b1){ digitalWrite(injectorPin1,HIGH); digitalWrite(13,HIGH); }
-      b1 = true;
-      //Serial.print(1);
-    }else{
-      if(b1){ digitalWrite(injectorPin1,LOW); digitalWrite(13,LOW); }
-      b1 = false;
-      //Serial.print(0);
-    }    
-        
-    if(mapa2[i] == 1){
-      if(!b2){ digitalWrite(injectorPin2,HIGH); digitalWrite(13,HIGH); }
-      b2 = true;     
-    }else{
-      if(b2){ digitalWrite(injectorPin2,LOW); digitalWrite(13,LOW); }
-      b2 = false;
-    }
-  }  
-
-  // seguranca
-  digitalWrite(injectorPin1,LOW);
-  digitalWrite(injectorPin2,LOW);  
-  digitalWrite(13,LOW);
-  
-  
-}
 
 /**
 Metodo que faz a predicao de como serao feitos os ciclos de abertura e fechamento do bico injetor
@@ -218,8 +180,6 @@ int mapa[MAX_RPM * 2][MAX_PSI];
   
   
 void loop() {
-  
-  
   
   digitalWrite(injectorPin1,LOW);
   digitalWrite(injectorPin2,LOW);
